@@ -6,6 +6,7 @@ from datetime import datetime
 from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
+from views import SelectAplicacoes
 
 load_dotenv(override=True)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -73,5 +74,18 @@ async def deploy(interaction:discord.Interaction, upload_zip:discord.Attachment,
     await square_client.upload_app(File(zip_path))
     os.unlink(zip_path)
     await interaction.followup.send("A aplicação foi enviada para a hospedagem com sucesso.")
+
+@bot.tree.command()
+async def apps(interaction:discord.Interaction):
+    aplicacoes = await square_client.all_apps()
+    if not aplicacoes:
+        await interaction.response.send_message(f"Você não tem nenhuma aplicação hospedada.")
+        return
+    
+    await interaction.response.defer(ephemeral=True)
+    view = discord.ui.View()
+    view.add_item(SelectAplicacoes(aplicacoes))
+    await interaction.followup.send("Teste", view=view)
+
 
 bot.run(BOT_TOKEN)
